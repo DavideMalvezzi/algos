@@ -1,0 +1,297 @@
+\documentclass{report}
+\setcounter{chapter}{1}
+\input{../latex_template/preamble}
+\input{../latex_template/macros}
+\input{../latex_template/letterfonts}
+\graphicspath{ {./images/} }
+
+
+\title{Umeyama-Kabsch Algorithm \cite{88573} \\
+       \large Aligning point patterns
+}
+\date{2022 October}
+\author{Davide Malvezzi}
+
+\begin{document}
+\maketitle
+\section{Umeyama-Kabsch algorithm}
+Given two sets of n-dimensional points $x_i$ and $y_i$ we want to find the scaling $c$, rotation $R$ and translation $t$ 
+to align the two sets and which minimize 
+\begin{align}
+    e^2(c, R, t) = \frac{1}{n}\sum_{i=1}^{n}\lVert y_i - (cRx_i+t) \rVert^2
+\end{align}
+\subsection{Least-square estimation for rotation only}
+Let's start considering only the estimation of the rotation matrix. \\
+Given $A$ and $B$, $m$x$n$ matrix, whose columns are points from the sets $y_i$ and $x_i$ respectively and $R$ $m$x$m$ rotation matrix, 
+we seek to minimize
+\begin{align}
+    \min_R \lVert A - R B \rVert^2 \label{eqn:rotation_only}
+\end{align}
+under the constraints
+\begin{align}
+    R^TR=I  \\
+    det(R)=1
+\end{align}
+which define $R$ as a valid rotation matrix. \\
+The corresponding Lagrangian is
+\begin{align}
+    F = \lVert A - R B \rVert^2 + \text{tr}(L(R^TR - I)) + g(det(R) - 1)
+\end{align}
+\nt{What is $\text{tr}(L(R^TR-I))$?}{
+Let R = $ \begin{bmatrix}
+        a & b \\
+        c & d 
+    \end{bmatrix} $ 
+
+    then $R^TR = 1$ becomes 
+    \begin{align}
+        \begin{bmatrix} a & c \\ b & d \end{bmatrix}  
+        \begin{bmatrix} a & b \\ c & d \end{bmatrix} - 
+        \begin{bmatrix} 1 & 0 \\0 & 1 \end{bmatrix}  = 0 \\
+        \begin{bmatrix} f-1 & g \\ g & h-1 \end{bmatrix} = 0 \\
+    \end{align}
+
+    Therefore, we have 3 constraints, $f=1$, $h=1$ and $g=0$ and the corrisponding Lagrangian multipliers $\alpha$, $\beta$ and $\gamma$. \\
+    Then $L$ is a symmetric matrix of Lagrangian multipliers
+    \begin{align}
+        L=\begin{bmatrix} \alpha & \gamma \\ \gamma & \beta \end{bmatrix}  
+    \end{align}
+
+    and $L(R^TR-I)$ is
+    \begin{align}
+        \begin{bmatrix} \alpha & \gamma \\ \gamma & \beta \end{bmatrix}  
+        \begin{bmatrix} f-1 & g \\ g & h-1 \end{bmatrix} = 
+        \begin{bmatrix} \alpha(f-1)+\gamma g & \alpha g + \gamma (h-1) \\ \gamma (f-1) + \beta g & \gamma g + \beta (h-1) \end{bmatrix}
+    \end{align}
+    But we just need the main diagonal for the Lagrangian, so we apply the $tr$ operator.
+}
+
+
+\subsection{Derivatives}
+Deriving $F$ we obtain
+\begin{align}
+    &\frac{\partial F}{\partial R} = -2AB^T + 2RBB^T + 2RL + gR = 0 \\
+    &\frac{\partial F}{\partial L} =  R^TR - I = 0 \\
+    &\frac{\partial F}{\partial g} =  det(R) - 1 = 0
+\end{align}
+
+\nt{Matrix norm}{
+    Note that
+    \begin{align*}
+        \lVert A \rVert^2 = \text{tr}(A^TA)
+    \end{align*}
+}
+
+\nt{Matrix derivative}{
+    \includegraphics[width=\textwidth]{matrix_derivatives.png}
+}
+
+
+\subsection{Decomposing $L'$}
+From the first derivative
+\begin{align}
+RL'=AB^T \quad\text{where}\quad L'=BB^T + L + \frac{1}{2}gI
+\end{align}
+Note $L'$ is symmetric because sum of symmetric matrices. \\
+Multiplying each side by its transpose
+\begin{align}
+    (RL')^TRL'&=(AB^T)^TAB^T \\
+    L'^TR^TRL' &= BA^TAB^T \\
+    L'^TL &= BA^TAB^T \\
+    L'^2 &= BA^TAB^T
+\end{align}
+Let $AB^T=UDV^T$ be the SVD decomposition, then
+\begin{align}
+    L'^2 &= BA^TAB^T \\
+    L'^2 &= VDU^TUDV^T \\
+    L'^2 &= VD^2V^T 
+\end{align}
+Given $S=diag(s_1,...,s_n),$ with $s_i=1$ or $s_i=-1$, the matrix $L'$ can be written then as
+\begin{align}
+    L'&= VDSV^T 
+\end{align}
+\pf{Proof}{
+    \begin{align}
+        L'^2 &= L'L' = VDSV^T VDSV^T = VD^2V^T 
+    \end{align}
+}
+
+
+\subsection{Determinant equivalence}
+Now we have
+\begin{align}
+    det(L') &= det(VDSV^T) = det(V)det(D)det(S)det(V^T) = det(D)det(S) \\
+    det(L') &= det(R^TAB^T) =det(R^T)det(AB^T) = det(AB^T)
+\end{align}
+Therefore
+\begin{align}
+    det(D)det(S) = det(AB^T)
+\end{align}
+Since singular value are always positive, $det(D) > 0$ then $det(S)$ must be equal to 1 or -1 depending on the sign of $det(AB^T)$
+
+
+\subsection{Replacing into $F$}
+We can rewrite $F$ with the results obtained
+\begin{align}
+    F=\lVert A-RB \rVert^2 &= \lVert A \rVert^2 + \lVert B \rVert^2 - 2\text{tr}(AB^TR^T) \\
+    &= \lVert A \rVert^2 + \lVert B \rVert^2 - 2\text{tr}(R^TAB^T) \quad \text{\#trace of matrix product is indipendent on order} \\
+    &= \lVert A \rVert^2 + \lVert B \rVert^2 - 2\text{tr}(L') \\
+    &= \lVert A \rVert^2 + \lVert B \rVert^2 - 2\text{tr}(VDSV^T) \\
+    &= \lVert A \rVert^2 + \lVert B \rVert^2 - 2\text{tr}(V^TVDS) \quad \text{\#trace of matrix product is indipendent on order} \\
+    &= \lVert A \rVert^2 + \lVert B \rVert^2 - 2\text{tr}(DS) \\
+    &= \lVert A \rVert^2 + \lVert B \rVert^2 - 2(d_1s_1+...+d_ms_m)
+\end{align}
+Being the singular value in $D$ always positive, the minimum of $F$ is obtained when all $s_i=1$ if $det(AB^T)\geq0$ otherwise
+if $det(AB^T)<0$ we must set $s_m=-1$ to satisfy the determinant equivalence.
+
+
+\subsection{Getting optimal $R$}
+When $AB^T$ is full rank therefore $L'^{-1}$ exists, so
+\begin{align}
+    R = AB^TL'^{-1}=UDV^TVD^{-1}SV^T = USV^T
+\end{align}
+When $rank(AB^T)=m-1$  we have
+\begin{align}
+    RL' &= AB^T \\
+    RVDSV^T&=UDV^T\\
+    RVDS &= UD \\
+    U^TRVDS &= D \\
+    QD &= D
+\end{align}
+where $DS=D$ because $s_i = 1 \quad i=1...m-1$ and $d_m=0$. \
+The new matrix $Q=U^TRV$ is orthogonal by construction, so the last equation is true only if each column $q_i = e_i \quad i=1...m-1$. \
+For the last column $q_m$ possibile solutions are $e_m$ or $-e_m$, this depends on the determinat value
+\begin{align}
+    det(Q) = det(U^T)det(R)det(V) = det(U)det(V)
+\end{align}\
+so if $det(U)det(V)=1$ then $det(Q)=1$ so $q_m=e_m$ otherwise $q_m=-e_m$
+In conclusion
+\begin{align}
+    R = UQV^T
+\end{align}
+
+
+\subsection{Least-square estimation for $c$, $R$ and $t$}
+Let's now consider the original problem
+\begin{align}
+    e^2(c, R, t) = \frac{1}{n}\sum_{i=1}^{n}\lVert y_i - (cRx_i+t) \rVert^2 = \frac{1}{n} \lVert Y - cRX - th^T \rVert^2
+\end{align}
+\dfn{Normalization matrix}{
+We define a $n$x$n$ normalization matrix $K$ as
+
+    \begin{align}
+        K = I - \frac{1}{n} h h^T \quad \text{where} \quad h = ({1,\dots,1})^T
+    \end{align}
+with the following properties 
+    \begin{align}
+        K = K^T = K^2
+    \end{align}
+}
+
+\dfn{}{
+    Then we can define
+    \begin{align}
+        \mu_x &= \frac{1}{n} Xh \\
+        \mu_y &= \frac{1}{n} Yh\\
+        \sigma^2_x &= \frac{1}{n} \lVert XK \rVert^2 \\
+        \sigma^2_y &= \frac{1}{n} \lVert YK \rVert^2 \\
+        \Sigma_{xy} &= \frac{1}{n} YKX^T \\
+        X &= XK + \frac{1}{n} X hh^T \\
+        Y &= YK + \frac{1}{n} Y hh^T
+    \end{align}
+}
+and substitute in the loss function
+\begin{align}
+    e^2(c, R, t) &= \frac{1}{n} \lVert Y - cRX - th^T \rVert^2 \\
+    &= \frac{1}{n} \lVert YK + \frac{1}{n}Yhh^T - cRXK - \frac{c}{n}RXhh^T - th^T \rVert^2 \\
+    &= \frac{1}{n} \lVert YK - cRXK + \left(\frac{1}{n}Yh - \frac{c}{n}RXh - t\right)h^T \rVert^2 \\
+    &= \frac{1}{n} \lVert YK - cRXK + t'h^T \rVert^2 \\
+    &= \frac{1}{n} \left( \lVert YK - cRXK \rVert^2 + \lVert t'h^T \rVert^2 - 2\text{tr}(K(Y^T - cX^TR^T)t'h^T) \right)
+\end{align}
+Let's analyze each single term of the loss.
+
+\subsubsection{First term}
+If we define $A=YK$ and $B=XK$, the optimal $R$ of the first term is given by the solution of \ref{eqn:rotation_only}. \\
+Also note that 
+\begin{align}
+    AB^T = YKK^TX^T = YKX^T = n\Sigma_{xy}
+\end{align}
+\nt{SVD decomposition of a constant times a matrix}{
+    Given a matrix $A$ and the matrix $cA$, their SVD decomposition are equivalent except the singular value of
+    the second are the singular of the first matrix times $c$
+}
+\noindent So, given the SVD decomposition of $\Sigma_{xy} = UDV^T$, the optimal $R=USV^T$. \\
+Then the first term can be decomposed as 
+\begin{align}
+    \frac{1}{n} \lVert YK - cRXK \rVert^2 
+    &= \frac{1}{n} \left( \lVert YK \rVert^2 + \lVert cRXK \rVert^2  - 2 \text{tr}((YK)^T(cRXK))\right) \\
+    &= \frac{1}{n} \left( \lVert YK \rVert^2 + \lVert cXK \rVert^2  - 2 \text{tr}((YK)(cRXK)^T)\right) \\
+    &= \frac{1}{n} \left( \lVert YK \rVert^2 + \lVert cXK \rVert^2  - 2 \text{tr}(cYKK^TX^TR^T)\right) \\ 
+    &= \frac{1}{n} \left( \lVert YK \rVert^2 + \lVert cXK \rVert^2  - 2 \text{tr}(cYKX^TR^T)\right) 
+\end{align}
+Let $UDV^T$ be the SVD decomposition of $\Sigma_{xy}=\frac{1}{n}YKX^T$, then
+\begin{align}
+    YK(cXK)^T = cYKK^TX^T = cYKKX^T = cYK^2X^T = cYKX^T = cnUDV^T
+\end{align}
+Substituting back $R=USV^T$ and $cYKX^T = cnUDV^T$
+\begin{align}
+    \frac{1}{n} \lVert YK - cRXK \rVert^2 
+    &= \frac{1}{n} \left( \lVert YK \rVert^2 + \lVert cXK \rVert^2  - 2\text{tr}(YKX^TR^T)\right)\\
+    &= \frac{1}{n} \left( \lVert YK \rVert^2 + \lVert cXK \rVert^2  - 2\text{tr}(cnUDV^T(USV^T)^T)\right)\\
+    &= \frac{1}{n} \left( \lVert YK \rVert^2 + \lVert cXK \rVert^2  - 2\text{tr}(cnUDV^TVS^TU^T)\right)\\
+    &= \frac{1}{n} \left( \lVert YK \rVert^2 + \lVert cXK \rVert^2  - 2\text{tr}(cnUDS^TU^T)\right)\\
+    &= \frac{1}{n} \left( \lVert YK \rVert^2 + \lVert cXK \rVert^2  - 2\text{tr}(cnDS)\right)\\
+    &= \sigma^2_y + c^2 \sigma^2_x - 2c\text{tr}(DS)
+\end{align}
+In conclusion we have a quadratic equation in $c$, so
+\begin{align}
+    c = \frac{\text{tr}(DS)}{\sigma^2_x}
+\end{align}
+\subsubsection{Second term}
+The second term can be rewritten as
+\begin{align}
+    \lVert t'h^T \rVert^2 &= \lVert t'\rVert^2 \lVert h^T \rVert^2 = n \lVert t'\rVert^2
+\end{align}
+So to minimize the loss $t'$ must be 0
+\begin{align}
+    t' &= 0 \\
+    \frac{1}{n}Yh - \frac{c}{n}RXh - t &= 0 \\
+    t &= \frac{1}{n}Yh - \frac{c}{n}RXh \\
+    t &= \mu_y - cR\mu_x 
+\end{align}
+
+\subsubsection{Third term}
+Observing that $h^TK=h^T(I - \frac{1}{n}hh^T)=h^T-\frac{1}{n}h^Thh^T=h^T-h^T=0$, so the third term is always equal to 0
+\begin{align}
+    \text{tr}(K(YT-cXTRT)t'h^T) = \text{tr}(K(YT-cXTRT)t'h^TKK^{-1}) = 0
+\end{align}
+
+\newpage
+
+\subsection{Algorithm}
+\begin{algorithm}
+    \caption{Umeyama-Kabsch Algorithm}
+    \begin{algorithmic}
+        \Require $X$ $m$x$n$ matrix
+        \Require $Y$ $m$x$n$ matrix
+        \State $\mu_x$ = mean($X$)
+        \State $\mu_y$ = mean($Y$)
+        \State $\sigma^2_x$ = var($X$)
+        \State $\Sigma_{xy}$ = cov($X$, $Y$)
+        \State S = eye($n$)
+        \State $U, D, V^T$ = svd($\Sigma_{xy}$)
+        \If{det($U$) det($V^T$) $<$ 0}
+            \State  $S$[n, n] = -1
+        \EndIf
+        \State $c$ = trace($DS$) / $\sigma^2_x$
+        \State $R$ = $U S V^T$
+        \State $t = \mu_y - cR\mu_x$
+        \State \Return $c$, $R$, $t$
+    \end{algorithmic}
+\end{algorithm}
+
+
+\bibliographystyle{plain} % We choose the "plain" reference style
+\bibliography{refs} % Entries are in the refs.bib file
+
+\end{document}
