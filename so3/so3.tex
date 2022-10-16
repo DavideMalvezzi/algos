@@ -1,0 +1,210 @@
+\documentclass{report}
+\setcounter{chapter}{1}
+\input{../latex_template/preamble}
+\input{../latex_template/macros}
+\input{../latex_template/letterfonts}
+\graphicspath{ {./images/} }
+
+
+\title{$SO(3)$ and $so(3)$ \cite{slides}\\
+    \large Lie group and Lie algebra for 3D rotation matrices
+}
+\date{2022 October}
+\author{Davide Malvezzi}
+
+\begin{document}
+\maketitle
+
+\section{Skew-symmetric matrices}
+\dfn{Skew-symmetric matrix}{
+    A matrix $A \in \mathbb{R}^{n \times n}$ is called skew-symmetric or anti-symmetric if 
+    \begin{align}
+        A^T = -A
+    \end{align}
+}
+\noindent Given a vector $w \in \mathbb{R}^3$ the hat operator give the corresponding skew-symmetric matrix
+\begin{align}
+    \hat{w} = \left[ w \right]_{\times} = 
+    \left(
+    \begin{matrix}
+        &0 &-w_3 &-w_2 \\   
+        &w_3 &0 &-w_1 \\
+        &-w_2 &w_1 &0
+    \end{matrix}
+    \right)
+\end{align}
+In particular
+\begin{align}
+    \hat{w}u = \left[ w \right]_{\times} u = w {\times} u
+\end{align}
+
+\section{$SO(3)$ and $so(3)$}
+\dfn{Lie group}{
+    A Lie group (or infinitesimal group) is a smooth manifold that is also a group, such that the group operations multiplication and inversion are smooth maps.
+}
+\noindent We define as the special orthogonal group $SO(3)$ the Lie group of all 3D rotation matrices
+\begin{align}
+    SO(3) = \left\{  R \in \mathbb{R}^{3x3} \ | \ R^TR = I, \det(R)=1 \right\}
+\end{align} 
+Let's now consider a family of rotations $R(t)$ with $R(0)=I$ which continuously transform a point from its original location
+\begin{align}
+    X(t) = R(t)X_0 \quad R(t) \in SO(3)
+\end{align}
+since $R(t)R(t)^T=I$ then
+\begin{align}
+    \frac{d}{dt}(RR^T) = \dot{R}R^T + R\dot{R}^T = 0 \quad \rightarrow \quad \dot{R}R^T = -(\dot{R}R^T)^T 
+\end{align}
+It follow that $\dot{R}R^T$ is a skew-symmetric matrix, so
+\begin{align}
+    \dot{R}R^T = \hat{w}(t) \quad \rightarrow \quad \dot{R}= \hat{w}(t)R
+\end{align}
+Since $R(0) = I$ then $\dot{R}(0) = \hat{w}(0)$, therefore from the first order Taylor expansion
+\begin{align}
+    R(dt) = R(0) + dR = I + \hat{w}(0)dt
+\end{align}
+We define the space $so(3)$ as
+\begin{align}
+    so(3) = \left\{\hat{w} \ | \ w \in \mathbb{R}^3\right\}
+\end{align}
+The $so(3)$ is the Lie algebra of the Lie group $SO(3)$.
+\dfn{Lie algebra}{
+    A Lie group gives rise to a Lie algebra, which is its tangent space at the identity. 
+}
+
+\subsection{Exponential map}
+Given the differential equation system
+\begin{align}
+    \begin{cases}
+        \dot{R}(t)= \hat{w}R(t)\\
+        R(0) = I
+    \end{cases}
+\end{align}
+the solution is
+\begin{align}
+    R(t) = e^{\hat{w}t} = \sum_{n=0}^{\infty} \frac{(\hat{w}t)^n}{n!} = I + \hat{w}t + \frac{(\hat{w}t)^2}{2} + \dots
+\end{align}
+This matrix exponential defines a map from the Lie algebra to the Lie group
+\begin{align}
+    \text{exp : } so(3) \rightarrow SO(3)
+\end{align}
+which is a rotation around the axis $w \in \mathbb{R}^3$ by an angle of $t$ if $|w| = 1$.
+
+\subsection{Logarithm map}
+The logarithm map is the inverse of the exponential map
+\begin{align}
+    \text{log : } SO(3) \rightarrow so(3)
+\end{align}
+Given $R \in SO(3), R \neq I$
+\begin{align}
+    \lvert w \rvert = \cos^{-1}\left( \frac{\text{tr}(R) - 1}{2} \right) \\
+    \frac{w}{\lvert w \rvert} = \frac{1}{2\sin(\lvert w \rvert)} 
+    \left(
+    \begin{matrix}
+        r_{32} - r_{23}\\
+        r_{13} - r_{31}\\
+        r_{21} - r_{12}
+    \end{matrix}
+    \right)
+\end{align}
+
+\nt{}{
+    The above statement says any orthogonal transformation $R \in SO(3)$ 
+    can be realized by rotating by an angle $|w|$ around an axis $\frac{w}{|w|}$ 
+    as defined above.
+}
+\noindent The above representation is not unique because increasing the angle by multiples of 
+$2\pi$ will give the same rotation.
+
+\subsection{Rodrigues' Formula}
+Given $w \in \mathbb{R}^3$, the exponential map can be computed in closed form as
+\begin{align}
+    e^{\hat{w}} = I + \frac{\hat{w}}{|w|}\sin(|w|) + \frac{\hat{w}^2}{|w|^2}(1-\cos(|w|))
+\end{align}
+
+\section{$SE(3)$ and $se(3)$}
+In the same way it is possible to define a Lie group and a Lie algebra for the rigid-body transformation.
+\dfn{Special euclidian group $SE(3)$}{
+    \begin{align}
+        SE(3) = \left\{  
+            g = \left(
+            \begin{matrix}
+                &R &T&  \\
+                &0 &1& 
+            \end{matrix} 
+            \right) \ | \ R \in SO(3), T \in \mathbb{R}^3
+        \right\} \subset \mathbb{R}^{4 \times 4}
+    \end{align}
+}
+Given $g(t) = \left(
+    \begin{matrix}
+        &R(t) &T(t)&  \\
+        &0 &1& 
+    \end{matrix} 
+    \right)$ we have
+\begin{align}
+    \dot{g}(t)g^{-1}(t) = \left(
+        \begin{matrix}
+            &\dot{R}R^T &\dot{T} - \dot{R}R^TT &  \\
+            &0 &1& 
+        \end{matrix} 
+        \right)
+\end{align}
+As in the case of $SO(3)$, the matrix  $\dot{R}R^T$ corresponds 
+to some skew-symmetric matrix $\hat{w} \in so(3)$
+\begin{align}
+    \dot{g}(t)g^{-1}(t) = \left(
+        \begin{matrix}
+            &\hat{w}(t) & v(t) &  \\
+            &0 &1& 
+        \end{matrix} 
+        \right) = \hat{\xi}(t)
+\end{align}
+So 
+\begin{align}
+    \dot{g}= \dot{g}g^{-1}g = \hat{\xi}g
+\end{align}
+therefore $\hat{\xi}$ is the tangent space of $g(t)$ and it is called a twist.
+\dfn{$se(3)$}{
+    The Lie algebra of $SE(3)$ is
+    \begin{align}
+        se(3) = \left\{ \hat{\xi} = 
+            \left(
+            \begin{matrix}
+                &\hat{w} &v \\
+                &0 &0
+            \end{matrix}
+            \right) \ | \ \hat{w} \in so(3), v \in \mathbb{R}^3
+        \right\}
+    \end{align}
+}
+
+\subsection{Exponential map}
+For $\hat{w} = 0$, $e^{\hat{\xi} t} = \left( 
+\begin{matrix}
+&I &v& \\
+&0 &1&    
+\end{matrix}
+\right)$, otherwise
+\begin{align}
+    e^{\hat{\xi}} = \left( 
+        \begin{matrix}
+        &e^{\hat{w}} &\frac{(I-e^{\hat{w}})\hat{w}v+ww^Tv}{|w|^2}& \\
+        &0 &1&    
+        \end{matrix}
+        \right)
+\end{align}
+
+\subsection{Logarithm map}
+Given $g = (R, T)$, we know that there exists $w \in \mathbb{R}^3$ with $e^{\hat{w}} = R$. \\
+If $|w| \neq 0$, the exponential form of $g$ introduced above shows that we merely need to solve the equation
+\begin{align}
+    \frac{(I-e^{\hat{w}})\hat{w}v+ww^Tv}{|w|^2} = T
+\end{align}
+for the vector $v \in \mathbb{R}^3$.\\
+Just as in the case of $SO(3)$, this representation is generally not unique, because there exist many
+twists which represent the same rigid-body motion.
+
+\bibliographystyle{plain}
+\bibliography{refs}
+
+\end{document}

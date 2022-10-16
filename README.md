@@ -2,6 +2,7 @@
 Just a collection of various algorithms I encountered during my journey as developer. For each of them I try to add some notes to describe the  rationale and the derivation.
 
 ## Table of Contents
+- [SO(3)](./so3/so3.pdf): Lie group and Lie algebra for 3D rotation matrices
 - [Umeyama-Kabsch](./umeyama_kabsch/umeyama_kabsch.pdf): find best alignment between two set of corresponding points
 
 ## :warning: Disclaimer :warning:
