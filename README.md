@@ -4,6 +4,7 @@ Just a collection of various algorithms I encountered during my journey as devel
 ## Table of Contents
 - [Angles](./angles): collection of methods to work with angles
 - [SO(3)](./so3): Lie group and Lie algebra for 3D rotation matrices
+- [Quaternion](./quaternion): collection of methods to work with quaternions
 - [Umeyama-Kabsch](./umeyama_kabsch): find best alignment between two set of corresponding points
 - [Unscented transform](./unscented_transform): estimate the result of applying a nonlinear transformation to a probability distribution characterized by its mean and covariance
 ## :warning: Disclaimer :warning:
